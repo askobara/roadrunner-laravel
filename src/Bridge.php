@@ -2,7 +2,7 @@
 
 namespace updg\roadrunner\laravel;
 
-use Symfony\Bridge\PsrHttpMessage\Factory\DiactorosFactory;
+use Symfony\Bridge\PsrHttpMessage\Factory\PsrHttpFactory;
 use Symfony\Bridge\PsrHttpMessage\Factory\HttpFoundationFactory;
 
 class Bridge
@@ -80,7 +80,10 @@ class Bridge
         $this->prepareKernel();
 
         $relay = new \Spiral\Goridge\StreamRelay(STDIN, STDOUT);
-        $psr7 = new \Spiral\RoadRunner\PSR7Client(new \Spiral\RoadRunner\Worker($relay));
+        $worker = new \Spiral\RoadRunner\Worker($relay);
+        $factory = new \Nyholm\Psr7\Factory\Psr17Factory();
+        $psr7 = new \Spiral\RoadRunner\PSR7Client($worker, $factory, $factory, $factory);
+        $psr7factory = new PsrHttpFactory($factory, $factory, $factory, $factory);
         $httpFoundationFactory = new HttpFoundationFactory();
 
         while ($req = $psr7->acceptRequest()) {
@@ -90,7 +93,6 @@ class Bridge
 
             $response = $this->_kernel->handle($request);
 
-            $psr7factory = new DiactorosFactory();
             $psr7response = $psr7factory->createResponse($response);
             $psr7->respond($psr7response);
 
